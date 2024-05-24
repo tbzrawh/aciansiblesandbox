@@ -1,0 +1,67 @@
+tenant_name: businessunit1
+vrf_name: bu1vrf1
+vrf_shared: sharedvrf1
+l3out_name: core_l3out
+contract_name: contract
+domain_name: bu_domain
+
+vlan_pool: bupool
+vlan_start: 100
+vlan_end: 200
+
+interfaces:
+  - { "node": 101, "interface": "1/30", "policy": "bu_vpc_policy_group" }
+  - { "node": 102, "interface": "1/30", "policy": "bu_vpc_policy_group" }
+  - { "node": 101, "interface": "1/31", "policy": "bu_vpc_policy_group" }
+  - { "node": 102, "interface": "1/31", "policy": "bu_vpc_policy_group" }
+  - { "node": 101, "interface": "1/32", "policy": "bu_vpc_policy_group" }
+  - { "node": 102, "interface": "1/32", "policy": "bu_vpc_policy_group" }
+
+networks:
+  ap: buapp1
+  vrf: bu1vrf1
+  epgs:
+    - {
+        "epg": "buegp1",
+        "bd": "bubd1",
+        "ip": "192.168.1.1",
+        "mask": 24,
+        "vlan": 101,
+      }
+    - {
+        "epg": "buegp2",
+        "bd": "bubd2",
+        "ip": "192.168.2.1",
+        "mask": 24,
+        "vlan": 102,
+      }
+    - {
+        "epg": "buegp3",
+        "bd": "bubd3",
+        "ip": "192.168.3.1",
+        "mask": 24,
+        "vlan": 103,
+      }
+    - {
+        "epg": "buegp4",
+        "bd": "bubd4",
+        "ip": "192.168.4.1",
+        "mask": 24,
+        "vlan": 104,
+      }
+    - {
+        "epg": "buegp5",
+        "bd": "bubd5",
+        "ip": "192.168.5.1",
+        "mask": 24,
+        "vlan": 105,
+      }
+  consumer: ["contract1", "contract2"]
+  provider: ["contract3", "contract4", "contract5"]
+
+contracts:
+  - { "name": "contract1" }
+  - { "name": "contract2" }
+  - { "name": "contract3" }
+  - { "name": "contract4" }
+  - { "name": "contract5" }

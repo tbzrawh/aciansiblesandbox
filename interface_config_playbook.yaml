@@ -1,0 +1,30 @@
+---
+- name: Manage Port-Channels and Virtual Port-Channels in ACI
+  hosts: aci
+  connection: local
+  gather_facts: no
+
+  vars:
+    aci_login: &aci_login
+      host: "{{ ansible_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      validate_certs: "{{ aci_validate_certs }}"
+
+  vars_files:
+    - common.yaml
+
+  tasks:
+    - name: Configure VPCs
+      cisco.aci.aci_interface_config:
+        <<: *aci_login
+        role: leaf
+        port_type: access
+        interface_type: pc_or_vpc
+        policy_group: "{{ item.policy }}"
+        node: "{{ item.node }}"
+        interface: "{{ item.interface }}"
+        #interface: "1/{{ item }}"
+        state: present
+        #     loop: "{{ range(30,32) |list }}"
+      loop: "{{vpc_config}}"

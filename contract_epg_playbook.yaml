@@ -1,0 +1,71 @@
+---
+- name: Contract & Domains
+  hosts: aci
+  connection: local
+  gather_facts: no
+
+  vars:
+    aci_login: &aci_login
+      host: "{{ ansible_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      validate_certs: "{{ aci_validate_certs }}"
+
+  vars_files:
+    - common.yaml
+
+  tasks:
+    - name: Create Contracts
+      cisco.aci.aci_contract:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        contract: "{{ item.name }}"
+        state: present
+      loop: "{{ contracts }}"
+
+    - name: Create Contract Subjects
+      cisco.aci.aci_contract_subject:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        contract: "{{ item.name }}"
+        subject: default
+        state: present
+      loop: "{{ contracts }}"
+
+    - name: Add Consumer Contract to EPG
+      cisco.aci.aci_epg_to_contract:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        ap: "{{ networks.ap }}"
+        epg: "{{ item.0.epg }}"
+        contract: "{{ item.1 }}"
+        contract_type: "consumer"
+      loop: "{{ networks.epgs|product(networks.consumer)|list }}"
+
+    - name: Add Provider Contract to EPG
+      cisco.aci.aci_epg_to_contract:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        ap: "{{ networks.ap }}"
+        epg: "{{ item.0.epg }}"
+        contract: "{{ item.1 }}"
+        contract_type: "provider"
+      loop: "{{ networks.epgs|product(networks.provider)|list }}"
+
+    - name: Create Domain
+      cisco.aci.aci_domain:
+        <<: *aci_login
+        domain: "{{ domain_name }}"
+        domain_type: phys
+        state: present
+
+    - name: Add Domain to EPG
+      cisco.aci.aci_epg_to_domain:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        ap: "{{ networks.ap }}"
+        epg: "{{ item.epg }}"
+        domain: "{{ domain_name }}"
+        domain_type: phys
+        state: present
+      loop: "{{ networks.epgs }}"

@@ -1,0 +1,76 @@
+---
+- name: VRF BD EPG Gateway
+  hosts: aci
+  connection: local
+  gather_facts: no
+
+  vars:
+    aci_login: &aci_login
+      host: "{{ ansible_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      validate_certs: "{{ aci_validate_certs }}"
+
+  vars_files:
+    - common.yaml
+
+  tasks:
+    - name: Ensure tenant exists
+      cisco.aci.aci_tenant:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        state: present
+    - name: Ensure vrfs exists
+      cisco.aci.aci_vrf:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        vrf: "{{ item }}"
+        state: present
+      loop: ["{{vrf_name}}", "{{vrf_shared}}"]
+    - name: Ensure Bridge Domains exist
+      cisco.aci.aci_bd:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        vrf: "{{ networks.vrf }}"
+        bd: "{{ item.bd }}"
+        state: present
+      loop: "{{ networks.epgs }}"
+    - name: Ensure Subnets exist
+      aci_bd_subnet:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        bd: "{{ item.bd }}"
+        gateway: "{{ item.ip }}"
+        mask: "{{ item.mask }}"
+        state: present
+      loop: "{{ networks.epgs }}"
+    - name: Ensure the Application Profile exists
+      cisco.aci.aci_ap:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        app_profile: "{{ networks.ap }}"
+        state: present
+    - name: Ensure EPGs exist
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        ap: "{{ networks.ap }}"
+        epg: "{{ item.epg }}"
+        bd: "{{ item.bd }}"
+        state: present
+      loop: "{{ networks.epgs }}"
+    - name: Add a new VLAN to EPG
+      cisco.aci.aci_static_binding_to_epg:
+        <<: *aci_login
+        tenant: "{{ tenant_name }}"
+        ap: "{{ networks.ap }}"
+        epg: "{{ item.0.epg }}"
+        encap_id: "{{ item.0.vlan }}"
+        deploy_immediacy: lazy
+        interface_mode: untagged
+        interface_type: switch_port
+        pod_id: 1
+        leafs: "{{ item.1.node }}"
+        interface: "{{ item.1.interface}}"
+        state: present
+      loop: "{{ networks.epgs|product(interfaces)|list }}"

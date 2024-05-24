@@ -1,0 +1,62 @@
+---
+- name: Port Policies
+  hosts: aci
+  connection: local
+  gather_facts: no
+
+  vars:
+    aci_login: &aci_login
+      host: "{{ ansible_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      validate_certs: "{{ aci_validate_certs }}"
+
+  vars_files:
+    - common.yaml
+
+  tasks:
+    - name: Add a Link Level Policy
+      cisco.aci.aci_interface_policy_link_level:
+        <<: *aci_login
+        link_level_policy: bu_link_level_policy
+        auto_negotiation: on
+        speed: 10G
+        state: present
+
+    - name: Create a LLDP interface policy
+      cisco.aci.aci_interface_policy_lldp:
+        <<: *aci_login
+        lldp_policy: bu_lldp_policy
+        receive_state: true
+        transmit_state: true
+        state: present
+
+    - name: Create a Port Channel interface policy
+      cisco.aci.aci_interface_policy_port_channel:
+        <<: *aci_login
+        port_channel: bu_lacp_policy
+        mode: active
+        min_links: 1
+        max_links: 16
+        state: present
+
+    - name: Create a Leaf Access Port Policy Group
+      cisco.aci.aci_interface_policy_leaf_policy_group:
+        <<: *aci_login
+        lag_type: leaf
+        policy_group: bu_port_policy_group
+        link_level_policy: bu_link_level_policy
+        cdp_policy: default
+        lldp_policy: default
+        state: present
+
+    - name: Create a Leaf Access VPC Policy Group
+      cisco.aci.aci_interface_policy_leaf_policy_group:
+        <<: *aci_login
+        lag_type: node
+        policy_group: bu_vpc_policy_group
+        link_level_policy: bu_link_level_policy
+        cdp_policy: default
+        lldp_policy: bu_lldp_policy
+        port_channel_policy: bu_lacp_policy
+        state: present

@@ -1,0 +1,8 @@
+all:
+  children:
+    aci:
+      hosts:
+        10.10.20.14:
+          aci_username: admin
+          aci_validate_certs: "no"
+    ungrouped: {}

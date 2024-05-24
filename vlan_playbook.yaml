@@ -1,0 +1,43 @@
+---
+- name: Bulk VLAN Creation in ACI
+  hosts: aci
+  connection: local
+  gather_facts: no
+
+  vars:
+    aci_login: &aci_login
+      host: "{{ ansible_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      validate_certs: "{{ aci_validate_certs }}"
+
+  vars_files:
+    - common.yaml
+
+  tasks:
+    - name: Ensure VLAN Pool exists
+      aci_vlan_pool:
+        <<: *aci_login
+        pool: "{{ vlan_pool }}"
+        pool_allocation_mode: static
+        description: Production VLANs
+        state: present
+
+    - name: Add a new VLAN encap block
+      aci_vlan_pool_encap_block:
+        <<: *aci_login
+        pool: "{{ vlan_pool }}"
+        pool_allocation_mode: static
+        block_name: "vlans"
+        block_start: "{{ vlan_start }}"
+        block_end: "{{ vlan_end }}"
+        state: present
+
+    - name: Bind a physical domain to VLAN pool
+      aci_domain_to_vlan_pool:
+        <<: *aci_login
+        pool: "{{ vlan_pool }}"
+        domain: phys_dom
+        domain_type: phys
+        pool_allocation_mode: static
+        state: present
