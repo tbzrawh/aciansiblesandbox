@@ -27,4 +27,4 @@
         #interface: "1/{{ item }}"
         state: present
         #     loop: "{{ range(30,32) |list }}"
-      loop: "{{vpc_config}}"
+      loop: "{{interfaces}}"
