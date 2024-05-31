@@ -2,6 +2,11 @@
 
 > use with devnetsandbox: https://devnetsandbox.cisco.com/DevNet/catalog/aci-simulator-sandbox
 
+clone repo, add auth information
+
+    git clone https://github.com/tbzrawh/aciansiblesandbox/ aci
+    cd aci
+
 On Devbox prepare env and run playbooks:
 
     ansible-galaxy collection install cisco.aci
